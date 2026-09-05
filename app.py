@@ -84,7 +84,8 @@ def profile():
     # --------------------------------
 
     ai_result = generate_recommendations(
-        prompt
+        prompt,
+        profile=profile
     )
 
 
