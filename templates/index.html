@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Personalized Recommendation System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="hero">
+
+        <div class="badge">
+            AI POWERED
+        </div>
+
+        <h1>
+            Personalized<br>
+            Recommendation System
+        </h1>
+
+        <p>
+            Discover recommendations tailored to your
+            interests, skills, preferences and goals.
+        </p>
+
+        <button class="start-btn"
+                type="button"
+                onclick="showProfile()">
+            Get Started →
+        </button>
+
+    </header>
+
+
+    <!-- ================= FEATURES ================= -->
+
+    <section class="features">
+
+        <div class="feature-card">
+            <div class="icon">👤</div>
+
+            <h3>Personal Profile</h3>
+
+            <p>
+                Tell us about your background,
+                interests and skill level.
+            </p>
+        </div>
+
+
+        <div class="feature-card">
+            <div class="icon">🧠</div>
+
+            <h3>AI Analysis</h3>
+
+            <p>
+                AI analyzes your preferences
+                and requirements.
+            </p>
+        </div>
+
+
+        <div class="feature-card">
+            <div class="icon">✨</div>
+
+            <h3>Smart Recommendations</h3>
+
+            <p>
+                Get ranked recommendations
+                with clear explanations.
+            </p>
+        </div>
+
+
+        <div class="feature-card">
+            <div class="icon">🔄</div>
+
+            <h3>Feedback & Refinement</h3>
+
+            <p>
+                Improve your recommendations
+                using your feedback.
+            </p>
+        </div>
+
+    </section>
+
+
+    <!-- ================= PROFILE SECTION ================= -->
+
+    <section id="profile-section"
+             class="profile-section">
+
+        <div class="section-title">
+
+            <span>STEP 1</span>
+
+            <h2>Create Your Profile</h2>
+
+            <p>
+                Enter your details to receive personalized
+                recommendations.
+            </p>
+
+        </div>
+
+
+        <!-- IMPORTANT:
+             The complete form is now properly opened
+             and closed AFTER the submit button.
+        -->
+
+        <form id="profileForm"
+              method="POST"
+              action="/profile"
+              class="card">
+
+
+            <div class="form-grid">
+
+
+                <!-- NAME -->
+
+                <div class="form-group">
+
+                    <label for="name">
+                        Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Enter your name"
+                        required>
+
+                </div>
+
+
+                <!-- AGE -->
+
+                <div class="form-group">
+
+                    <label for="age">
+                        Age
+                    </label>
+
+                    <input
+                        type="number"
+                        id="age"
+                        name="age"
+                        placeholder="Enter your age"
+                        min="1"
+                        max="100"
+                        required>
+
+                </div>
+
+
+                <!-- BACKGROUND -->
+
+                <div class="form-group full">
+
+                    <label for="background">
+                        Background
+                    </label>
+
+                    <input
+                        type="text"
+                        id="background"
+                        name="background"
+                        placeholder="Example: Computer Science Student"
+                        required>
+
+                </div>
+
+
+                <!-- INTERESTS -->
+
+                <div class="form-group full">
+
+                    <label for="interests">
+                        Interests
+                    </label>
+
+                    <input
+                        type="text"
+                        id="interests"
+                        name="interests"
+                        placeholder="Example: Python, AI, Data Science"
+                        required>
+
+                </div>
+
+
+                <!-- SKILL LEVEL -->
+
+                <div class="form-group">
+
+                    <label for="skill">
+                        Skill Level
+                    </label>
+
+                    <select
+                        id="skill"
+                        name="skill"
+                        required>
+
+                        <option value="">
+                            Select skill level
+                        </option>
+
+                        <option value="Beginner">
+                            Beginner
+                        </option>
+
+                        <option value="Intermediate">
+                            Intermediate
+                        </option>
+
+                        <option value="Advanced">
+                            Advanced
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- PREFERRED CATEGORY -->
+
+                <div class="form-group">
+
+                    <label for="category">
+                        Preferred Category
+                    </label>
+
+                    <select
+                        id="category"
+                        name="category"
+                        required>
+
+                        <option value="">
+                            Select category
+                        </option>
+
+                        <option value="Courses">
+                            Courses
+                        </option>
+
+                        <option value="Books">
+                            Books
+                        </option>
+
+                        <option value="Projects">
+                            Projects
+                        </option>
+
+                        <option value="Tools">
+                            Tools
+                        </option>
+
+                        <option value="Videos">
+                            Videos
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- GOAL -->
+
+                <div class="form-group full">
+
+                    <label for="goal">
+                        Goal
+                    </label>
+
+                    <input
+                        type="text"
+                        id="goal"
+                        name="goal"
+                        placeholder="Example: Become an AI Developer"
+                        required>
+
+                </div>
+
+
+                <!-- PREFERENCES -->
+
+                <div class="form-group full">
+
+                    <label for="preferences">
+                        Preferences
+                    </label>
+
+                    <textarea
+                        id="preferences"
+                        name="preferences"
+                        placeholder="Example: Practical learning, projects, beginner friendly"
+                        required></textarea>
+
+                </div>
+
+
+                <!-- NUMBER OF ITEMS -->
+
+                <div class="form-group">
+
+                    <label for="number">
+                        Number of Items
+                    </label>
+
+                    <select
+                        id="number"
+                        name="number"
+                        required>
+
+                        <option value="3">
+                            3 Recommendations
+                        </option>
+
+                        <option value="5" selected>
+                            5 Recommendations
+                        </option>
+
+                        <option value="7">
+                            7 Recommendations
+                        </option>
+
+                        <option value="10">
+                            10 Recommendations
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- SUBMIT BUTTON -->
+
+            <button
+                type="submit"
+                class="generate-btn"
+                id="generateButton">
+
+                Analyze My Preferences →
+
+            </button>
+
+
+        </form>
+
+
+        <!-- ================= STEP 2 ================= -->
+
+        {% if profile_submitted %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 2</span>
+
+                <h2>
+                    Collected User Profile
+                </h2>
+
+                <p>
+                    Your information has been successfully collected.
+                </p>
+
+            </div>
+
+
+            <div class="profile-grid">
+
+
+                <div class="profile-item">
+
+                    <span>Name</span>
+
+                    <strong>
+                        {{ profile["Name"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item">
+
+                    <span>Age</span>
+
+                    <strong>
+                        {{ profile["Age"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item">
+
+                    <span>Background</span>
+
+                    <strong>
+                        {{ profile["Background"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item">
+
+                    <span>Skill Level</span>
+
+                    <strong>
+                        {{ profile["Skill Level"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item">
+
+                    <span>Preferred Category</span>
+
+                    <strong>
+                        {{ profile["Preferred Category"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item">
+
+                    <span>Number of Items</span>
+
+                    <strong>
+                        {{ profile["Number of Items"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item full">
+
+                    <span>Interests</span>
+
+                    <strong>
+                        {{ profile["Interests"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item full">
+
+                    <span>Goal</span>
+
+                    <strong>
+                        {{ profile["Goal"] }}
+                    </strong>
+
+                </div>
+
+
+                <div class="profile-item full">
+
+                    <span>Preferences</span>
+
+                    <strong>
+                        {{ profile["Preferences"] }}
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= STEP 3 ================= -->
+
+        {% if preference_analysis %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 3</span>
+
+                <h2>
+                    Preference Analysis
+                </h2>
+
+                <p>
+                    Your preferences were analyzed using
+                    semantic similarity.
+                </p>
+
+            </div>
+
+
+            {% for item in preference_analysis["top_preferences"] %}
+
+            <div style="margin: 15px 0;">
+
+                <strong>
+                    {{ item["category"] }}
+                </strong>
+
+                <div style="
+                    background: #e5e7eb;
+                    height: 12px;
+                    border-radius: 10px;
+                    margin-top: 6px;
+                ">
+
+                    <div style="
+                        width: {{ item['score'] }}%;
+                        height: 12px;
+                        border-radius: 10px;
+                        background: #6366f1;
+                    "></div>
+
+                </div>
+
+                <small>
+                    {{ item["score"] }}%
+                </small>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= STEP 4 ================= -->
+
+        {% if prompt %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 4</span>
+
+                <h2>
+                    Generated AI Prompt
+                </h2>
+
+            </div>
+
+
+            <pre style="
+                white-space: pre-wrap;
+                line-height: 1.6;
+                padding: 20px;
+                border-radius: 12px;
+                background: #f5f5f5;
+            ">{{ prompt }}</pre>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= ERROR ================= -->
+
+        {% if error %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>ERROR</span>
+
+                <h2>
+                    Something went wrong
+                </h2>
+
+                <p>
+                    {{ error }}
+                </p>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= RECOMMENDATIONS ================= -->
+
+        {% if recommendations %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 5</span>
+
+                <h2>
+                    AI Recommendations
+                </h2>
+
+                <p>
+                    Personalized recommendations generated by Ollama.
+                </p>
+
+            </div>
+
+
+            {% for item in recommendations %}
+
+            <div class="feature-card"
+                 style="margin-bottom: 20px;">
+
+                <h3>
+
+                    #{{ item["rank"] }}
+                    {{ item["name"] }}
+
+                </h3>
+
+
+                <p>
+
+                    <strong>
+                        Description:
+                    </strong>
+
+                    {{ item["description"] }}
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Suitability Score:
+                    </strong>
+
+                    {{ item["score"] }}/100
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Why it matches:
+                    </strong>
+
+                    {{ item["reason"] }}
+
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= FEEDBACK ================= -->
+
+        {% if recommendations %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 6</span>
+
+                <h2>
+                    User Feedback
+                </h2>
+
+                <p>
+                    Tell the system how you want to improve
+                    your recommendations.
+                </p>
+
+            </div>
+
+
+            <form method="POST"
+                  action="/feedback">
+
+                <textarea
+                    name="feedback"
+                    placeholder="Example: Give me more practical AI projects for beginners."
+                    required
+                    style="
+                        width: 100%;
+                        min-height: 120px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                    ">{{ feedback or "" }}</textarea>
+
+
+                <button
+                    type="submit"
+                    class="generate-btn">
+
+                    Refine Recommendations →
+
+                </button>
+
+            </form>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= INTENT ================= -->
+
+        {% if intent %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 7</span>
+
+                <h2>
+                    Detected User Intent
+                </h2>
+
+                <p>
+                    {{ intent }}
+                </p>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= REFINED ================= -->
+
+        {% if refined_recommendations %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 8</span>
+
+                <h2>
+                    Refined Recommendations
+                </h2>
+
+                <p>
+                    Recommendations updated using your feedback.
+                </p>
+
+            </div>
+
+
+            {% for item in recommendations %}
+
+            <div class="feature-card"
+                 style="margin-bottom: 20px;">
+
+                <h3>
+
+                    #{{ item["rank"] }}
+                    {{ item["name"] }}
+
+                </h3>
+
+                <p>
+
+                    <strong>
+                        Description:
+                    </strong>
+
+                    {{ item["description"] }}
+
+                </p>
+
+                <p>
+
+                    <strong>
+                        Score:
+                    </strong>
+
+                    {{ item["score"] }}/100
+
+                </p>
+
+                <p>
+
+                    <strong>
+                        Reason:
+                    </strong>
+
+                    {{ item["reason"] }}
+
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ================= SAVED ================= -->
+
+        {% if saved %}
+
+        <div class="profile-result">
+
+            <div class="result-header">
+
+                <span>STEP 9</span>
+
+                <h2>
+                    ✅ Recommendation Saved Successfully
+                </h2>
+
+                <p>
+                    Your recommendations were saved to the
+                    CSV file.
+                </p>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+    </section>
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+function showProfile() {
+
+    const section =
+        document.getElementById("profile-section");
+
+    section.scrollIntoView({
+        behavior: "smooth"
+    });
+
+}
+
+
+/*
+Prevent accidental double-clicks and show
+that the AI is processing.
+*/
+
+document
+    .getElementById("profileForm")
+    .addEventListener("submit", function () {
+
+        const button =
+            document.getElementById("generateButton");
+
+        button.innerText =
+            "Analyzing... Please wait";
+
+        button.disabled = true;
+
+    });
+
+</script>
+
+
+</body>
+
+</html>
