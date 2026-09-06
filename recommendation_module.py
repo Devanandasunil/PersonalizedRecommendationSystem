@@ -2,9 +2,14 @@ import os
 import re
 import requests
 import pandas as pd
+
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "llama3.2:3b"
@@ -15,24 +20,48 @@ DATASET_PATH = os.path.join(
     "courses.csv"
 )
 
-# Load the sentence transformer model
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
+# ============================================================
+# SENTENCE TRANSFORMER MODEL
+# ============================================================
+
+embedding_model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
+
+
+# ============================================================
+# LOAD KAGGLE DATASET
+# ============================================================
 
 def load_dataset():
     """
     Load the Kaggle course dataset.
     """
+
     if not os.path.exists(DATASET_PATH):
         return None
 
-    return pd.read_csv(DATASET_PATH)
+    try:
+        return pd.read_csv(DATASET_PATH)
+
+    except Exception:
+        return None
 
 
-def get_dataset_candidates(profile, feedback="", exclude_names=None, top_k=15):
+# ============================================================
+# FIND RELEVANT DATASET COURSES
+# ============================================================
+
+def get_dataset_candidates(
+    profile,
+    feedback="",
+    exclude_names=None,
+    top_k=15
+):
     """
     Find the most relevant courses from the Kaggle dataset
-    using semantic similarity.
+    using Sentence Transformers and cosine similarity.
     """
 
     df = load_dataset()
@@ -42,7 +71,10 @@ def get_dataset_candidates(profile, feedback="", exclude_names=None, top_k=15):
 
     exclude_names = exclude_names or []
 
-    # Create a combined user preference text
+    # --------------------------------------------------------
+    # Build user preference text
+    # --------------------------------------------------------
+
     user_text = f"""
     Interests: {profile.get("Interests", "")}
     Skill Level: {profile.get("Skill Level", "")}
@@ -52,26 +84,46 @@ def get_dataset_candidates(profile, feedback="", exclude_names=None, top_k=15):
     Feedback: {feedback}
     """
 
-    # Create course text from important dataset fields
+    # --------------------------------------------------------
+    # Build searchable course text
+    # --------------------------------------------------------
+
     df["course_text"] = (
-        df["course_title"].fillna("").astype(str)
+        df["course_title"]
+        .fillna("")
+        .astype(str)
         + " "
-        + df["subject"].fillna("").astype(str)
+        + df["subject"]
+        .fillna("")
+        .astype(str)
         + " "
-        + df["level"].fillna("").astype(str)
+        + df["level"]
+        .fillna("")
+        .astype(str)
     )
 
-    # Generate embeddings
+    # --------------------------------------------------------
+    # Create user embedding
+    # --------------------------------------------------------
+
     user_embedding = embedding_model.encode(
         [user_text],
         convert_to_numpy=True
     )
+
+    # --------------------------------------------------------
+    # Create course embeddings
+    # --------------------------------------------------------
 
     course_embeddings = embedding_model.encode(
         df["course_text"].tolist(),
         convert_to_numpy=True,
         show_progress_bar=False
     )
+
+    # --------------------------------------------------------
+    # Calculate semantic similarity
+    # --------------------------------------------------------
 
     similarities = cosine_similarity(
         user_embedding,
@@ -80,34 +132,88 @@ def get_dataset_candidates(profile, feedback="", exclude_names=None, top_k=15):
 
     df["similarity"] = similarities
 
-    # Remove previously recommended courses during refinement
+    # --------------------------------------------------------
+    # Remove previously recommended courses
+    # --------------------------------------------------------
+
     if exclude_names:
+
         df = df[
             ~df["course_title"].isin(exclude_names)
         ]
 
-    # Sort by semantic relevance
+    # --------------------------------------------------------
+    # Sort by relevance
+    # --------------------------------------------------------
+
     df = df.sort_values(
         "similarity",
         ascending=False
-    ).head(top_k)
+    )
+
+    df = df.head(top_k)
+
+    # --------------------------------------------------------
+    # Convert dataset rows into candidates
+    # --------------------------------------------------------
 
     candidates = []
 
     for _, row in df.iterrows():
 
         candidates.append({
-            "course_id": row.get("course_id", ""),
-            "title": row.get("course_title", ""),
-            "subject": row.get("subject", ""),
-            "level": row.get("level", ""),
-            "price": row.get("price", ""),
-            "is_paid": row.get("is_paid", ""),
-            "reviews": row.get("num_reviews", ""),
-            "subscribers": row.get("num_subscribers", ""),
-            "url": row.get("url", ""),
+            "course_id": row.get(
+                "course_id",
+                ""
+            ),
+
+            "title": row.get(
+                "course_title",
+                ""
+            ),
+
+            "subject": row.get(
+                "subject",
+                ""
+            ),
+
+            "level": row.get(
+                "level",
+                ""
+            ),
+
+            "price": row.get(
+                "price",
+                ""
+            ),
+
+            "is_paid": row.get(
+                "is_paid",
+                ""
+            ),
+
+            "reviews": row.get(
+                "num_reviews",
+                ""
+            ),
+
+            "subscribers": row.get(
+                "num_subscribers",
+                ""
+            ),
+
+            "url": row.get(
+                "url",
+                ""
+            ),
+
             "similarity": round(
-                float(row.get("similarity", 0)) * 100,
+                float(
+                    row.get(
+                        "similarity",
+                        0
+                    )
+                ) * 100,
                 2
             )
         })
@@ -115,9 +221,14 @@ def get_dataset_candidates(profile, feedback="", exclude_names=None, top_k=15):
     return candidates
 
 
+# ============================================================
+# BUILD DATASET CONTEXT FOR OLLAMA
+# ============================================================
+
 def build_dataset_context(candidates):
     """
-    Convert dataset candidates into a compact prompt section.
+    Convert dataset candidates into a prompt section
+    that can be provided to Ollama.
     """
 
     if not candidates:
@@ -125,7 +236,10 @@ def build_dataset_context(candidates):
 
     context = ""
 
-    for index, course in enumerate(candidates, start=1):
+    for index, course in enumerate(
+        candidates,
+        start=1
+    ):
 
         context += f"""
 CANDIDATE {index}
@@ -144,6 +258,10 @@ Dataset Relevance: {course["similarity"]}%
     return context.strip()
 
 
+# ============================================================
+# GENERATE PERSONALIZED RECOMMENDATIONS
+# ============================================================
+
 def generate_recommendations(
     prompt,
     profile=None,
@@ -155,21 +273,30 @@ def generate_recommendations(
     and ask Ollama to generate personalized recommendations.
     """
 
-    # If a profile is provided, retrieve actual dataset courses
     candidates = []
 
+    # --------------------------------------------------------
+    # Retrieve relevant courses from Kaggle dataset
+    # --------------------------------------------------------
+
     if profile:
+
         candidates = get_dataset_candidates(
-            profile,
+            profile=profile,
             feedback=feedback,
             exclude_names=exclude_names,
             top_k=15
         )
 
-    dataset_context = build_dataset_context(candidates)
+    # --------------------------------------------------------
+    # Build final prompt
+    # --------------------------------------------------------
 
-    # Add dataset information to the original prompt
     if candidates:
+
+        dataset_context = build_dataset_context(
+            candidates
+        )
 
         final_prompt = f"""
 {prompt}
@@ -177,37 +304,54 @@ def generate_recommendations(
 DATASET INSTRUCTION
 ===================
 
-Use ONLY courses from the Kaggle course dataset provided below.
+The following courses were retrieved from the
+Kaggle course dataset using semantic similarity.
 
-Do NOT invent course names.
-
-Use the EXACT course title from the dataset.
-
-Select the courses that best match the user's:
-- interests
-- skill level
-- goal
-- preferred category
-- preferences
-- feedback
-
-Rank the selected courses by suitability.
+Use ONLY these dataset courses for the recommendations.
 
 KAGGLE DATASET COURSES
 ======================
 
 {dataset_context}
 
-IMPORTANT:
-- Do not create fictional courses.
-- Do not modify course titles.
-- Use only the candidate courses listed above.
-- Generate exactly the requested number of recommendations.
-- Keep the requested output format.
+IMPORTANT RULES
+===============
+
+1. Do NOT invent course names.
+2. Use the EXACT course title from the dataset.
+3. Recommend only courses listed above.
+4. Generate exactly the requested number of recommendations.
+5. Consider the user's interests.
+6. Consider the user's skill level.
+7. Consider the user's goal.
+8. Consider the user's preferred category.
+9. Consider the user's preferences.
+10. Consider the user's feedback when provided.
+11. Rank the recommendations according to suitability.
+12. Give each recommendation a suitability score from 0 to 100.
+13. Explain why each recommendation matches the user.
+14. Do not add unnecessary introductory text.
+
+Use exactly this format:
+
+1. Recommendation Name
+Description: Short description
+Score: 95
+Reason: Explanation
+
+2. Recommendation Name
+Description: Short description
+Score: 90
+Reason: Explanation
 """
 
     else:
+
         final_prompt = prompt
+
+    # --------------------------------------------------------
+    # Ollama request
+    # --------------------------------------------------------
 
     payload = {
         "model": MODEL_NAME,
@@ -286,9 +430,13 @@ IMPORTANT:
         }
 
 
+# ============================================================
+# PARSE OLLAMA RECOMMENDATIONS
+# ============================================================
+
 def parse_recommendations(text):
     """
-    Convert Ollama response into structured recommendations.
+    Convert Ollama's response into structured recommendations.
     """
 
     recommendations = []
@@ -330,14 +478,21 @@ def parse_recommendations(text):
     for match in matches:
 
         number = match[0].strip()
+
         name = match[1].strip()
+
         description = match[2].strip()
+
         score = match[3].strip()
+
         reason = match[4].strip()
 
         try:
+
             score_value = int(score)
+
         except ValueError:
+
             score_value = 0
 
         recommendations.append({
@@ -348,16 +503,25 @@ def parse_recommendations(text):
             "reason": reason
         })
 
+    # --------------------------------------------------------
     # Fallback parser
+    # --------------------------------------------------------
+
     if not recommendations:
+
         recommendations = parse_fallback(text)
 
     return recommendations
 
 
+# ============================================================
+# FALLBACK PARSER
+# ============================================================
+
 def parse_fallback(text):
     """
-    Simple fallback parser for LLM responses.
+    Simple fallback parser for slightly different
+    Ollama response formatting.
     """
 
     recommendations = []
@@ -372,12 +536,17 @@ def parse_fallback(text):
 
     for line in lines:
 
+        # ----------------------------------------------------
+        # Detect recommendation number
+        # ----------------------------------------------------
+
         if re.match(
             r"^\d+[\.\)]",
             line
         ):
 
             if current:
+
                 recommendations.append(
                     current
                 )
@@ -392,13 +561,21 @@ def parse_fallback(text):
                 "number": len(
                     recommendations
                 ) + 1,
+
                 "name": name,
+
                 "description": "",
+
                 "score": 0,
+
                 "reason": ""
             }
 
         elif current:
+
+            # ------------------------------------------------
+            # Description
+            # ------------------------------------------------
 
             if line.lower().startswith(
                 "description:"
@@ -410,6 +587,10 @@ def parse_fallback(text):
                         1
                     )[1].strip()
                 )
+
+            # ------------------------------------------------
+            # Score
+            # ------------------------------------------------
 
             elif line.lower().startswith(
                 "score:"
@@ -426,9 +607,14 @@ def parse_fallback(text):
                 )
 
                 if numbers:
+
                     current["score"] = int(
                         numbers[0]
                     )
+
+            # ------------------------------------------------
+            # Reason
+            # ------------------------------------------------
 
             elif line.lower().startswith(
                 "reason:"
@@ -441,7 +627,12 @@ def parse_fallback(text):
                     )[1].strip()
                 )
 
+    # --------------------------------------------------------
+    # Add final recommendation
+    # --------------------------------------------------------
+
     if current:
+
         recommendations.append(
             current
         )
